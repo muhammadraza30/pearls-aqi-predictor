@@ -108,23 +108,6 @@ This project uses **GitHub Actions** to automate the ML lifecycle:
 
 ---
 
-## ☁️ Deployment (Streamlit Cloud)
-
-1.  Fork this repo.
-2.  Login to [Streamlit Cloud](https://streamlit.io/cloud).
-3.  Create a **New App** and select your repository.
-4.  Set **Main file path** to `app.py`.
-5.  Go to **Advanced Settings** -> **Secrets** and add your `.env` variables:
-    ```toml
-    HOPSWORKS_API_KEY = "..."
-    HOPSWORKS_PROJECT_NAME = "..."
-    LATITUDE = "24.8608"
-    LONGITUDE = "67.0104"
-    ```
-6.  Click **Deploy**! 🚀
-
----
-
 ## 📊 Model Performance
 
 Metrics are tracked automatically. The best model is selected based on the lowest **RMSE** (Root Mean Squared Error) on the test set.
