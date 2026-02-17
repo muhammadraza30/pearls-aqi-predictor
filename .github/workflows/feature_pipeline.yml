@@ -1,0 +1,41 @@
+name: feature-pipeline
+
+on:
+  schedule:
+    - cron: '15 * * * *'  # Runs at minute 15 every hour
+  workflow_dispatch:
+
+concurrency:
+  group: feature-pipeline
+  cancel-in-progress: false
+
+jobs:
+  feature-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Feature Pipeline
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        run: python -m src.features.feature_pipeline
+
+      - name: Commit Predictions
+        run: |
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'actions@github.com'
+            git pull --rebase origin main || true
+            git add data/predictions_3day.csv
+            git commit -m "Update predictions" || echo "No changes to commit"
+            git push || echo "Push failed, may require manual intervention"
