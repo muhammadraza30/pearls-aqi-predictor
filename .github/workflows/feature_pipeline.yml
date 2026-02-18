@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -el {0}  # Required for conda activate to work
+        shell: bash -el {0}
 
     steps:
       - name: Checkout
@@ -24,8 +24,10 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: '3.11'
-          auto-activate-base: false
+          auto-activate: false
           activate-environment: .venv
+          conda-remove-defaults: true
+          channels: conda-forge
 
       - name: Install Twofish via Conda
         run: conda install -c conda-forge twofish -y

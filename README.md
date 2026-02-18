@@ -2,7 +2,7 @@
 
 A production-ready **Air Quality Index (AQI) Forecasting System** for Karachi, Pakistan. This project leverages advanced machine learning (SVR, LightGBM, LSTM), a robust feature store (Hopsworks), and a premium Streamlit dashboard to provide accurate 4-day AQI forecasts.
 
-![Live Demo](mraza-aqi-predictor.streamlit.app)
+**Go Visit:** [AQI Predictor Build By Muhammad Raza](https://mraza-aqi-predictor.streamlit.app)
 ---
 
 ## 🚀 Features
