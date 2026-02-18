@@ -37,6 +37,8 @@ jobs:
 
       - name: Run Feature Pipeline
         env:
+          LONGITUDE: ${{ secrets.LONGITUDE }}
+          LATITUDE: ${{ secrets.LATITUDE }}
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
