@@ -111,7 +111,6 @@ LON = float(LON)def fetch_historical_data(start_date, end_date):
         "no2": hourly.Variables(3).ValuesAsNumpy(),
         "so2": hourly.Variables(4).ValuesAsNumpy(),
         "o3": hourly.Variables(5).ValuesAsNumpy(),
-        "nh3": hourly.Variables(6).ValuesAsNumpy(),
         "aqi": hourly.Variables(7).ValuesAsNumpy(), # US AQI
     }
     aqi_df = pd.DataFrame(data = aqi_data)
