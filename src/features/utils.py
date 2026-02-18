@@ -38,9 +38,9 @@ def fetch_weather_data(lat, lon):
         print(f"Exception fetching data: {e}")
         return {}, {}
 
-def fetch_historical_weather(lat, lon, days=90):
+def fetch_historical_weather(lat, lon):
     """Fetch historical weather and AQI data for backfill."""
-    start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+    start_date = "2025-08-01"
     end_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     # Weather Archive
