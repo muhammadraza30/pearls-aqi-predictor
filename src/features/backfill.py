@@ -52,7 +52,7 @@ LON = float(LON)def fetch_historical_data(start_date, end_date):
         "longitude": LON,
         "start_date": start_date,
         "end_date": end_date,
-        "hourly": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "ammonia", "us_aqi"]
+        "hourly": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "us_aqi"]
     }
 
     print(f"Fetching historical data from {start_date} to {end_date}...")

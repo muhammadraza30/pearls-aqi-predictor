@@ -21,7 +21,7 @@ def fetch_weather_data(lat, lon):
     aqi_params = {
         "latitude": lat,
         "longitude": lon,
-        "current": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "ammonia", "us_aqi"]
+        "current": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "us_aqi"]
     }
 
     try:
@@ -57,7 +57,7 @@ def fetch_historical_weather(lat, lon, days=90):
     a_params = {
         "latitude": lat, "longitude": lon,
         "start_date": start_date, "end_date": end_date,
-        "hourly": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "ammonia", "us_aqi"],
+        "hourly": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone", "us_aqi"],
         "timezone": "UTC"
     }
 
