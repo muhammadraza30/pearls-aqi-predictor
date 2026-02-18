@@ -148,7 +148,8 @@ def engineer_features(df):
 
     df['datetime'] = pd.to_datetime(df['datetime'])
     # Convert ns to seconds (// 10^9)
-    df['unix_time'] = (df['datetime'].astype('int64') // 10**9).astype(int)
+    df['unix_time'] = (df['datetime'].astype('int64') // 10**9)
+    df['unix_time'] = df['unix_time'].astype('int64')
     
     df['hour'] = df['datetime'].dt.hour
     df['day'] = df['datetime'].dt.day

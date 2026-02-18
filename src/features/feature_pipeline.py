@@ -59,6 +59,7 @@ def run_feature_pipeline():
         return
 
     try:
+        from hsfs.feature import Feature
         fs = project.get_feature_store()
 
         # Get or Create Feature Group
@@ -68,7 +69,8 @@ def run_feature_pipeline():
             primary_key=["unix_time"],
             description="AQI and Weather features for Karachi",
             online_enabled=True,
-            event_time="datetime"
+            event_time="datetime",
+            features=[Feature("unix_time", "bigint"),]
         )
         print("✅ Feature Group retrieved/created.")
 
