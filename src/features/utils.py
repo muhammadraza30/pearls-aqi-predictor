@@ -96,7 +96,6 @@ def fetch_historical_weather(lat, lon, days=90):
             "nitrogen_dioxide": "no2",
             "sulphur_dioxide": "so2",
             "ozone": "o3",
-            "ammonia": "nh3",
             "us_aqi": "aqi"
         }
         df = df.rename(columns=rename_map)
@@ -132,7 +131,6 @@ def process_data(weather_data, aqi_data):
         'no2': current_a.get('nitrogen_dioxide'),
         'so2': current_a.get('sulphur_dioxide'),
         'o3': current_a.get('ozone'),
-        'nh3': current_a.get('ammonia'),
         'aqi': current_a.get('us_aqi'), # Standard 0-500 scale
     }
     
