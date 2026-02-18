@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from datetime import datetime
 from dotenv import load_dotenv
-
+import requests
 # Ensure project root in path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, PROJECT_ROOT)
