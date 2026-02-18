@@ -29,7 +29,8 @@ LON = float(os.getenv("LONGITUDE"))
 
 
 def run_feature_pipeline():
-
+    csv_path = "data/data.csv"  # ← move here
+    os.makedirs("data", exist_ok=True)
     print(f"Fetching CURRENT data for location: {LAT}, {LON}...")
     current_df = pd.DataFrame()
 
@@ -85,6 +86,10 @@ def run_feature_pipeline():
         hist_df["datetime"] = pd.to_datetime(hist_df["datetime"])
         hist_df["unix_time"] = hist_df["unix_time"].astype("int64")
 
+        # Save historical data to CSV
+        hist_df.to_csv(csv_path, mode='w', header=True, index=False)
+        print(f"✅ Saved {len(hist_df)} historical rows to CSV.")
+
         # Create Feature Group using dataframe schema
         aqi_fg = fs.create_feature_group(
             name="aqi_features",
@@ -111,6 +116,17 @@ def run_feature_pipeline():
         except requests.exceptions.ConnectionError:
             print("⚠️ Insert triggered but connection dropped. Verify in UI.")
 
+    if os.path.exists(csv_path):
+        existing_df = pd.read_csv(csv_path)
+        if current_df['unix_time'].iloc[0] in existing_df['unix_time'].values:
+            print("Record already exists. Skipping.")
+        else:
+            current_df.to_csv(csv_path, mode='a', header=False, index=False)
+            print("Record added.")
+    else:
+        # File doesn't exist yet, write with header
+        current_df.to_csv(csv_path, mode='w', header=True, index=False)
+        print("CSV created and record added.")
 
 if __name__ == "__main__":
     run_feature_pipeline()

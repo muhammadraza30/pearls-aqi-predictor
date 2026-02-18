@@ -124,7 +124,8 @@ def fetch_historical_data(start_date, end_date):
     # IMPORTANT: enforce correct types
     df["datetime"] = pd.to_datetime(df["datetime"])
     df["unix_time"] = df["unix_time"].astype("int64")
-
+    os.makedirs("data", exist_ok=True)      # ← ensure folder exists
+    df.to_csv("data/data.csv", index=False)
     return df
 
 
@@ -133,7 +134,6 @@ def backfill_feature_store():
     end_date = datetime.now().strftime("%Y-%m-%d")
 
     df = fetch_historical_data(start_date, end_date)
-
     if df.empty:
         print("No data fetched.")
         return

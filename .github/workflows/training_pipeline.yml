@@ -48,10 +48,22 @@ jobs:
 
       - name: Commit Artifacts
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git pull --rebase origin main || true
-          git add data/predictions_3day.csv
-          git add data/model_version.json || true
-          git commit -m "Update predictions and model version" || echo "No changes to commit"
-          git push || echo "Push failed, may require manual intervention"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Make sure we are on main and up to date
+          git checkout main
+          git fetch origin main
+          git reset --hard origin/main
+
+          # Add artifacts (ignore if missing)
+          git add data/predictions_3day.csv 2>/dev/null || true
+          git add data/model_version.json 2>/dev/null || true
+
+          # Only commit if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update predictions and model version [skip ci]"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
