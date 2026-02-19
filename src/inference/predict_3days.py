@@ -127,7 +127,7 @@ def load_recent_history():
     """Fetch last 24-48h of AQI history to bootstrap lags."""
     # Use fetch_historical_weather from utils
     # Fetch 3 days to be safe
-    df = fetch_historical_weather(LAT, LON, days=3)
+    df = fetch_historical_weather(LAT, LON).tail(72)
     if 'aqi' in df.columns and not df.empty:
         # Sort by time
         df = df.sort_values('datetime')

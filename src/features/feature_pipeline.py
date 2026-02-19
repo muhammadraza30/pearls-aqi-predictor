@@ -71,9 +71,6 @@ def run_feature_pipeline():
     if aqi_fg is None:
         print("🔄 Feature Group not found. Creating and backfilling from 1 Aug 2025...")
 
-        start_date = "2025-08-01"
-        end_date = datetime.now().strftime("%Y-%m-%d")
-
         hist_df = fetch_historical_weather(LAT, LON)
 
         # If your util uses days param, override manually:
@@ -115,18 +112,6 @@ def run_feature_pipeline():
             print("✅ Current data inserted.")
         except requests.exceptions.ConnectionError:
             print("⚠️ Insert triggered but connection dropped. Verify in UI.")
-
-    if os.path.exists(csv_path):
-        existing_df = pd.read_csv(csv_path)
-        if current_df['unix_time'].iloc[0] in existing_df['unix_time'].values:
-            print("Record already exists. Skipping.")
-        else:
-            current_df.to_csv(csv_path, mode='a', header=False, index=False)
-            print("Record added.")
-    else:
-        # File doesn't exist yet, write with header
-        current_df.to_csv(csv_path, mode='w', header=True, index=False)
-        print("CSV created and record added.")
 
 if __name__ == "__main__":
     run_feature_pipeline()

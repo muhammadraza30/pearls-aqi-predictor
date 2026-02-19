@@ -131,7 +131,7 @@ def fetch_historical_data(start_date, end_date):
 
 def backfill_feature_store():
     start_date = "2025-08-01"
-    end_date = datetime.now().strftime("%Y-%m-%d")
+    end_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")  # ← yesterday
 
     df = fetch_historical_data(start_date, end_date)
     if df.empty:

@@ -24,13 +24,7 @@ class AQIInferenceEngine:
         self.model = None
         self.scaler = None
         self.is_lstm = False
-        
-        # Default paths
-        # Default paths
-        # __file__ = src/inference/predictor.py
-        # dirname -> src/inference
-        # dirname -> src
-        # dirname -> ROOT
+
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         models_dir = os.path.join(root_dir, "models")
         
@@ -104,9 +98,6 @@ class AQIInferenceEngine:
             preds = self.model.predict(X_scaled)
             
         return preds
-
-
-
 
 def categorize_aqi(aqi_value):
     """Returns category, color, and emoji for an AQI value."""

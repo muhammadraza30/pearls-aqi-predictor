@@ -114,10 +114,10 @@ def process_data(weather_data, aqi_data):
         
     current_w = weather_data.get('current', {})
     current_a = aqi_data.get('current', {})
-    
-    # Map to schema columns
+    now_floored = datetime.now().replace(minute=0, second=0, microsecond=0)
+
     data = {
-        'datetime': datetime.now(),
+        'datetime': now_floored,
         'temp': current_w.get('temperature_2m'),
         'humidity': current_w.get('relative_humidity_2m'),
         'pressure': current_w.get('pressure_msl'),
