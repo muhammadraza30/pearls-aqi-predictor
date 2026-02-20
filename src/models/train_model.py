@@ -10,9 +10,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.model_selection import TimeSeriesSplit
 from lightgbm import LGBMRegressor
 # Try importing tensorflow, handles absence if cpu/gpu mismatch
 try:
@@ -24,6 +22,8 @@ except ImportError:
     HAS_TF = False
 
 from src.hopsworks_api import get_project
+# from src.features.feature_engineering import create_lag_features
+from src.features.preprocessing import fit_scaler, scale_features
 
 # Features to use (including lags)
 WEATHER_FEATURES = ['temp', 'humidity', 'wind_speed', 'clouds']
@@ -33,23 +33,6 @@ TARGET = 'target'  # Next Hour AQI
 
 MODELS_DIR = "models"
 os.makedirs(MODELS_DIR, exist_ok=True)
-
-
-def create_lag_features(df):
-    """Creates lag features for time-series forecasting."""
-    df = df.copy()
-    df = df.sort_values("unix_time")
-    
-    # Lagged features
-    df['aqi_lag_1'] = df['aqi'].shift(1)
-    df['aqi_lag_3'] = df['aqi'].shift(3)
-    df['aqi_lag_6'] = df['aqi'].shift(6)
-    df['aqi_lag_24'] = df['aqi'].shift(24)
-    
-    # Target: Next hour AQI
-    df['target'] = df['aqi'].shift(-1)
-    
-    return df.dropna()
 
 
 def build_lstm_model(input_dim):
@@ -109,18 +92,18 @@ def run_training():
 
     print(f"📊 Raw Data Shape: {df.shape}")
     
-    # 1. Feature Engineering
-    df_processed = create_lag_features(df)
-    print(f"📊 Processed Data Shape (with Lags): {df_processed.shape}")
+    # # 1. Feature Engineering
+    # df_processed = create_lag_features(df)
+    # print(f"📊 Processed Data Shape (with Lags): {df_processed.shape}")
     
-    if len(df_processed) < 100:
+    if len(df) < 100:
         print("❌ Not enough data for time-series training. Run backfill!")
         return
 
     # 2. Train/Test Split (Time Series - no shuffle)
-    train_size = int(len(df_processed) * 0.85)
-    train_df = df_processed.iloc[:train_size]
-    test_df = df_processed.iloc[train_size:]
+    train_size = int(len(df) * 0.85)
+    train_df = df.iloc[:train_size]
+    test_df = df.iloc[train_size:]
     
     X_train = train_df[FEATURES].values
     y_train = train_df[TARGET].values
@@ -128,13 +111,8 @@ def run_training():
     y_test = test_df[TARGET].values
     
     # 3. Scaling (Critical for SVR/LSTM)
-    print("⚖️ Scaling features...")
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-    
-    # Save scaler
-    joblib.dump(scaler, f"{MODELS_DIR}/scaler.pkl")
+    scaler, X_train_scaled = fit_scaler(X_train, save_path=f"{MODELS_DIR}/scaler.pkl")
+    X_test_scaled = scale_features(X_test, scaler)
     
     metrics = {}
     

@@ -19,11 +19,11 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 PREDICTIONS_CSV = PROJECT_ROOT / "data" / "predictions_3day.csv"
 PREDICTIONS_COMP_CSV = PROJECT_ROOT / "data" / "predictions_comparison.csv"
-VERSION_FILE = PROJECT_ROOT / "data" / "model_version.json"
+# VERSION_FILE = PROJECT_ROOT / "data" / "model_version.json"
 METRICS_FILE = PROJECT_ROOT / "data" / "model_metrics.json"
 
 from src.hopsworks_api import get_project
-
+VERSION_FILE = get_project().get_model_registry().get_model(f"aqi_lightgbm_model")
 
 @st.cache_data(ttl=300)  # Refresh every 5 minutes
 def load_predictions() -> list:
@@ -101,10 +101,12 @@ def load_historical_data() -> pd.DataFrame:
 
 def get_model_version() -> dict:
     """Get current model version info."""
-    if VERSION_FILE.exists():
-        with open(VERSION_FILE) as f:
-            return json.load(f)
-    return {"version": 0, "trained_at": "N/A", "models": []}
+    VERSION_FILE = get_project().get_model_registry().get_models("aqi_lightgbm_model")[-1]
+
+    # if VERSION_FILE.exists():
+    #     with open(VERSION_FILE) as f:
+    #         return json.load(f)
+    return {"version": VERSION_FILE.version, "trained_at": datetime.fromtimestamp(VERSION_FILE.created/ 1000).strftime('%Y-%m-%d %H:%M:%S'), "models": []}
 
 
 def _mock_predictions() -> list:

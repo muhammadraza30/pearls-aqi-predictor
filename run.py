@@ -9,7 +9,6 @@ Usage:
 import subprocess
 import sys
 import os
-import signal
 import time
 from pathlib import Path
 

@@ -1,93 +1,131 @@
-"""
-Feature pipeline to fetch weather and AQI data,
-process it, and insert into Hopsworks Feature Store.
-"""
-
 import sys
 import os
 import pandas as pd
 from datetime import datetime
-from dotenv import load_dotenv
 import requests
+
 # Ensure project root in path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, PROJECT_ROOT)
 
-from src.features.utils import (
-    fetch_weather_data,
-    fetch_historical_weather,
-    process_data,
-    engineer_features,
-)
-
-from src.hopsworks_api import get_project
-
+from dotenv import load_dotenv
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+
+from src.features.data_fetching import fetch_current_data, fetch_historical_data
+from src.features.feature_engineering import engineer_features
+from src.features.preprocessing import preprocess
+from src.hopsworks_api import get_project
 
 LAT = float(os.getenv("LATITUDE"))
 LON = float(os.getenv("LONGITUDE"))
+CSV_PATH = os.path.join(PROJECT_ROOT, "data", "data.csv")
+
+
+def _enforce_types(df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure correct dtypes before Hopsworks insert."""
+    # Convert to datetime and strip timezone (naive timestamp for Hopsworks)
+    df["datetime"] = pd.to_datetime(df["datetime"], utc=True).dt.tz_localize(None)
+    df["unix_time"] = df["unix_time"].astype("int64")
+
+    # Round all float columns to 1 decimal place
+    float_cols = df.select_dtypes(include=["float64", "float32"]).columns
+    df[float_cols] = df[float_cols].round(1)
+
+    return df
+
+
+def _save_to_csv(df: pd.DataFrame):
+    """Append new rows to local CSV, avoiding duplicates."""
+    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+
+    # Format datetime as clean string for CSV (no tz, no microseconds)
+    save_df = df.copy()
+    save_df["datetime"] = pd.to_datetime(save_df["datetime"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    if os.path.exists(CSV_PATH):
+        existing_df = pd.read_csv(CSV_PATH)
+        # Remove rows already in CSV (by unix_time)
+        new_rows = save_df[~save_df["unix_time"].isin(existing_df["unix_time"].values)]
+        if new_rows.empty:
+            print("📄 All records already exist in CSV. Skipping.")
+            return
+        new_rows.to_csv(CSV_PATH, mode="a", header=False, index=False)
+        print(f"📄 Appended {len(new_rows)} new rows to CSV.")
+    else:
+        save_df.to_csv(CSV_PATH, mode="w", header=True, index=False)
+        print(f"📄 Created CSV with {len(save_df)} rows.")
 
 
 def run_feature_pipeline():
-    csv_path = "data/data.csv"  # ← move here
-    os.makedirs("data", exist_ok=True)
-    print(f"Fetching CURRENT data for location: {LAT}, {LON}...")
-    current_df = pd.DataFrame()
+    """Main orchestrator: fetch → engineer → preprocess → upload."""
 
-    # ------------------- CURRENT DATA -------------------
-    try:
-        weather_data, aqi_data = fetch_weather_data(LAT, LON)
-
-        if weather_data and aqi_data:
-            current_df = process_data(weather_data, aqi_data)
-            current_df = engineer_features(current_df)
-
-            # Enforce types
-            current_df["datetime"] = pd.to_datetime(current_df["datetime"])
-            current_df["unix_time"] = current_df["unix_time"].astype("int64")
-
-            print(f"Current data prepared. Shape: {current_df.shape}")
-        else:
-            print("⚠️ Failed to fetch current data.")
-
-    except Exception as e:
-        print(f"❌ Error processing current data: {e}")
-
-    # ------------------- HOPSWORKS -------------------
+    # ──────────────── 1. CONNECT TO HOPSWORKS ────────────────
     project = get_project()
     if not project:
+        print("❌ Could not connect to Hopsworks. Aborting.")
         return
 
     fs = project.get_feature_store()
 
-    # Try to get existing FG
+    # Check if feature group already exists
+    # Check if feature group exists
     try:
         aqi_fg = fs.get_feature_group("aqi_features", version=1)
-        print("✅ Feature Group loaded.")
-    except:
+        # Check if schema matches current dataframe columns
+        # We need to fetch one row or check features to see if lags exist
+        existing_features = [f.name for f in aqi_fg.features]
+        required_features = ["aqi_lag_1", "target"] # Check key new features
+        
+        missing_features = [f for f in required_features if f not in existing_features]
+        
+        if missing_features:
+            print(f"⚠️ Schema mismatch! Missing: {missing_features}")
+            print("🗑️ Deleting old Feature Group to recreate with new schema...")
+            aqi_fg.delete()
+            fg_exists = False
+            aqi_fg = None
+        else:
+            fg_exists = True
+            print("✅ Feature Group 'aqi_features' found and schema matches.")
+            
+    except Exception:
         aqi_fg = None
+        fg_exists = False
+        print("ℹ️  Feature Group not found. Will backfill.")
 
-    # ------------------- BACKFILL -------------------
-    if aqi_fg is None:
-        print("🔄 Feature Group not found. Creating and backfilling from 1 Aug 2025...")
-
-        hist_df = fetch_historical_weather(LAT, LON)
-
-        # If your util uses days param, override manually:
-        if hist_df.empty:
-            print("❌ Historical fetch failed.")
+    # ──────────────── 2. FETCH DATA ────────────────
+    if fg_exists:
+        # Only fetch current hour's data
+        print(f"\n📡 Fetching CURRENT data for ({LAT}, {LON})...")
+        raw_df = fetch_current_data(LAT, LON)
+        if raw_df.empty:
+            print("❌ Failed to fetch current data. Aborting.")
+            return
+    else:
+        # Backfill from 2025-08-01 to last complete hour
+        print(f"\n📡 Fetching HISTORICAL data for ({LAT}, {LON})...")
+        raw_df = fetch_historical_data(LAT, LON, start_date="2025-08-01")
+        if raw_df.empty:
+            print("❌ Failed to fetch historical data. Aborting.")
             return
 
-        hist_df = engineer_features(hist_df)
+    print(f"   Raw data shape: {raw_df.shape}")
 
-        hist_df["datetime"] = pd.to_datetime(hist_df["datetime"])
-        hist_df["unix_time"] = hist_df["unix_time"].astype("int64")
+    # ──────────────── 3. FEATURE ENGINEERING ────────────────
+    print("\n⚙️  Applying feature engineering...")
+    featured_df = engineer_features(raw_df)
+    print(f"   Engineered data shape: {featured_df.shape}")
 
-        # Save historical data to CSV
-        hist_df.to_csv(csv_path, mode='w', header=True, index=False)
-        print(f"✅ Saved {len(hist_df)} historical rows to CSV.")
+    # ──────────────── 4. PREPROCESSING ────────────────
+    print("\n🧹 Applying preprocessing...")
+    clean_df = preprocess(featured_df)
+    clean_df = _enforce_types(clean_df)
+    print(f"   Clean data shape: {clean_df.shape}")
 
-        # Create Feature Group using dataframe schema
+    # ──────────────── 5. UPLOAD TO HOPSWORKS ────────────────
+    if not fg_exists:
+        # Create new feature group
+        print("\n☁️  Creating Feature Group and inserting backfill data...")
         aqi_fg = fs.create_feature_group(
             name="aqi_features",
             version=1,
@@ -96,22 +134,25 @@ def run_feature_pipeline():
             online_enabled=True,
             description="AQI and Weather features for Karachi",
         )
-
-        print(f"Inserting {len(hist_df)} historical rows...")
         try:
-            aqi_fg.insert(hist_df, write_options={"wait_for_job": False})
-            print("✅ Backfill complete.")
+            aqi_fg.insert(clean_df, write_options={"wait_for_job": True})
+            print(f"✅ Backfill complete — {len(clean_df)} rows inserted.")
         except requests.exceptions.ConnectionError:
-            print("⚠️ Insert triggered but connection dropped. Verify in UI.")
-
-    # ------------------- INSERT CURRENT -------------------
-    if not current_df.empty:
-        print("Inserting current data...")
+            print("⚠️  Insert triggered but connection dropped. Verify in Hopsworks UI.")
+    else:
+        # Insert current data into existing FG
+        print("\n☁️  Inserting current data into Feature Group...")
         try:
-            aqi_fg.insert(current_df, write_options={"wait_for_job": False})
-            print("✅ Current data inserted.")
+            aqi_fg.insert(clean_df, write_options={"wait_for_job": True})
+            print(f"✅ Current data inserted — {len(clean_df)} rows.")
         except requests.exceptions.ConnectionError:
-            print("⚠️ Insert triggered but connection dropped. Verify in UI.")
+            print("⚠️  Insert triggered but connection dropped. Verify in Hopsworks UI.")
+
+    # ──────────────── 6. SAVE TO LOCAL CSV ────────────────
+    _save_to_csv(clean_df)
+
+    print("\n🎉 Feature pipeline complete!")
+
 
 if __name__ == "__main__":
     run_feature_pipeline()

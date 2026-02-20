@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.inference.predictor import AQIInferenceEngine, categorize_aqi
-from src.features.utils import fetch_historical_weather  # Reuse this
+from src.features.data_fetching import fetch_historical_weather  # Reuse this
 
 LOG = logging.getLogger("predict_3days")
 

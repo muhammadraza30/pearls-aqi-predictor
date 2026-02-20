@@ -4,6 +4,7 @@ Serves prediction data and health check endpoints.
 """
 import os
 import sys
+import json
 from pathlib import Path
 
 # Ensure project root on sys.path
@@ -37,12 +38,8 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
     if not api_key_header:
-        # For now, allow open access if no key configured, or raise 403
-        # Strict mode:
-        # raise HTTPException(status_code=403, detail="Could not validate credentials")
         return None 
     
-    # Retrieve from env
     CORRECT_KEY = os.getenv("API_KEY")
     if CORRECT_KEY and api_key_header == CORRECT_KEY:
         return api_key_header
@@ -61,34 +58,25 @@ def get_predictions():
     if not PREDICTIONS_CSV.exists():
         # Generate on-the-fly
         try:
-            from src.inference.predict_3days import generate_predictions
-            df = generate_predictions(4)
-            df.to_csv(PREDICTIONS_CSV, index=False)
+            from src.inference.predict_3days import main as run_predictions
+            run_predictions()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))    else:
-    else:
-        try:
-            df = pd.read_csv(PREDICTIONS_CSV)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to read predictions: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    try:
+        df = pd.read_csv(PREDICTIONS_CSV)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read predictions: {e}")
+    
     return {"predictions": df.to_dict(orient="records")}
+
+
 @app.post("/api/predict")
 def trigger_prediction(api_key: str = Depends(get_api_key)):
     """Re-generate predictions on demand. Requires X-API-Key header."""
     try:
-        # Dynamic import to avoid circular dep at query time
-        # sys.path must work
-        from src.inference.predict_3days import main as generate_predictions
-        # generate_predictions() usually runs as script, we might need a function
-        # Calling main() refactored or directly script
-        # The script predict_3days.py has main() which prints
-        # We should ideally have a function that returns df
-        # For now, we subprocess or assume main() works
-        
-        # ACTUALLY: predict_3days.py has main(), but returns nothing.
-        # It saves CSV.
-        import subprocess
-        subprocess.run(["python", "-m", "src.inference.predict_3days"], check=True)
+        from src.inference.predict_3days import main as run_predictions
+        run_predictions()
         
         df = pd.read_csv(PREDICTIONS_CSV)
         return {"status": "success", "predictions": df.to_dict(orient="records")}
@@ -101,7 +89,6 @@ def model_version():
     """Return current model version info."""
     version_file = PROJECT_ROOT / "data" / "model_version.json"
     if version_file.exists():
-        import json
         try:
             with open(version_file) as f:
                 return json.load(f)

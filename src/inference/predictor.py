@@ -6,7 +6,6 @@ import os
 import joblib
 import numpy as np
 import pandas as pd
-from src.hopsworks_api import get_project
 
 # Try importing tensorflow for LSTM
 try:
@@ -98,6 +97,25 @@ class AQIInferenceEngine:
             preds = self.model.predict(X_scaled)
             
         return preds
+
+    def get_feature_importance(self):
+        """Returns feature importance as a DataFrame (works for LightGBM, returns None for SVR/LSTM)."""
+        if self.model is None:
+            return None
+        
+        try:
+            # LightGBM has feature_importances_ attribute
+            if hasattr(self.model, 'feature_importances_'):
+                importances = self.model.feature_importances_
+                fi_df = pd.DataFrame({
+                    'feature': FEATURES,
+                    'importance': importances
+                }).sort_values('importance', ascending=False)
+                return fi_df
+        except Exception as e:
+            print(f"⚠️ Could not extract feature importance: {e}")
+        
+        return None
 
 def categorize_aqi(aqi_value):
     """Returns category, color, and emoji for an AQI value."""

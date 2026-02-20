@@ -15,9 +15,8 @@ hopsworks:
   feature_group_version: 1
   model_registry_prefix: "aqi_"
   models:
-    - "RandomForest"
-    - "Ridge"
-    - "XGBoost"
+    - "SVR"
+    - "LightGBM"
     - "LSTM"
 
 prediction:
@@ -32,4 +31,4 @@ api:
 
 dashboard:
   port: 8501
-  theme: "dark"
+  theme: "light"

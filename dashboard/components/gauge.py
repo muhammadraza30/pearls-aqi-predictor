@@ -1,6 +1,7 @@
 """
 AQI Accelerometer / Gauge component using Plotly.
 Creates a stunning circular gauge with color-coded AQI zones.
+Light theme variant for the dashboard.
 """
 import plotly.graph_objects as go
 
@@ -17,7 +18,7 @@ AQI_ZONES = [
 
 def create_aqi_gauge(aqi_value: float, title: str = "Current AQI", height: int = 350) -> go.Figure:
     """
-    Create a premium accelerometer-style AQI gauge.
+    Create a premium accelerometer-style AQI gauge (light theme).
 
     Args:
         aqi_value: The AQI value to display (0-500)
@@ -51,31 +52,31 @@ def create_aqi_gauge(aqi_value: float, title: str = "Current AQI", height: int =
         mode="gauge+number+delta",
         value=aqi_value,
         number={
-            "font": {"size": 56, "color": "#ffffff", "family": "Inter, sans-serif"},
+            "font": {"size": 56, "color": "#1f2937", "family": "Inter, sans-serif"},
             "suffix": "",
         },
         title={
             "text": f"<b>{title}</b><br><span style='font-size:16px;color:{needle_color}'>{category}</span>",
-            "font": {"size": 20, "color": "#e0e0e0", "family": "Inter, sans-serif"},
+            "font": {"size": 20, "color": "#374151", "family": "Inter, sans-serif"},
         },
         gauge={
             "axis": {
                 "range": [0, 500],
                 "tickwidth": 2,
-                "tickcolor": "#555",
-                "tickfont": {"size": 11, "color": "#aaa"},
+                "tickcolor": "#9ca3af",
+                "tickfont": {"size": 11, "color": "#6b7280"},
                 "dtick": 50,
             },
             "bar": {
                 "color": needle_color,
                 "thickness": 0.3,
             },
-            "bgcolor": "rgba(30, 30, 60, 0.5)",
+            "bgcolor": "#f3f4f6",
             "borderwidth": 2,
-            "bordercolor": "rgba(255,255,255,0.15)",
+            "bordercolor": "#e5e7eb",
             "steps": steps,
             "threshold": {
-                "line": {"color": "#ffffff", "width": 4},
+                "line": {"color": "#1f2937", "width": 4},
                 "thickness": 0.85,
                 "value": aqi_value,
             },
@@ -85,8 +86,8 @@ def create_aqi_gauge(aqi_value: float, title: str = "Current AQI", height: int =
     fig.update_layout(
         height=height,
         margin=dict(l=30, r=30, t=60, b=30),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
         font={"family": "Inter, sans-serif"},
     )
 
@@ -95,7 +96,7 @@ def create_aqi_gauge(aqi_value: float, title: str = "Current AQI", height: int =
 
 def create_mini_gauge(aqi_value: float, day_label: str, height: int = 220) -> go.Figure:
     """
-    Create a smaller gauge for multi-day forecast display.
+    Create a smaller gauge for multi-day forecast display (light theme).
     """
     aqi_value = max(0, min(500, aqi_value))
 
@@ -111,18 +112,18 @@ def create_mini_gauge(aqi_value: float, day_label: str, height: int = 220) -> go
         mode="gauge+number",
         value=aqi_value,
         number={
-            "font": {"size": 36, "color": "#fff", "family": "Inter"},
+            "font": {"size": 36, "color": "#1f2937", "family": "Inter"},
         },
         title={
             "text": f"<b>{day_label}</b>",
-            "font": {"size": 14, "color": "#ccc", "family": "Inter"},
+            "font": {"size": 14, "color": "#6b7280", "family": "Inter"},
         },
         gauge={
-            "axis": {"range": [0, 500], "tickfont": {"size": 9, "color": "#888"}, "dtick": 100},
+            "axis": {"range": [0, 500], "tickfont": {"size": 9, "color": "#9ca3af"}, "dtick": 100},
             "bar": {"color": color, "thickness": 0.35},
-            "bgcolor": "rgba(30, 30, 60, 0.4)",
+            "bgcolor": "#f3f4f6",
             "borderwidth": 1,
-            "bordercolor": "rgba(255,255,255,0.1)",
+            "bordercolor": "#e5e7eb",
             "steps": [
                 {"range": [0, 50], "color": "rgba(0,228,0,0.15)"},
                 {"range": [50, 100], "color": "rgba(255,255,0,0.12)"},
@@ -137,8 +138,8 @@ def create_mini_gauge(aqi_value: float, day_label: str, height: int = 220) -> go
     fig.update_layout(
         height=height,
         margin=dict(l=20, r=20, t=45, b=15),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
     )
 
     return fig

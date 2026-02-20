@@ -2,7 +2,7 @@ name: feature-pipeline
 
 on:
   schedule:
-    - cron: '15 * * * *'  # Runs at minute 15 every hour
+    - cron: '30 0 * * *'  # Runs once daily at 00:30 UTC (after midnight)
   workflow_dispatch:
 
 concurrency:
@@ -12,6 +12,8 @@ concurrency:
 jobs:
   feature-pipeline:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         shell: bash -el {0}
@@ -41,10 +43,9 @@ jobs:
           LATITUDE: ${{ secrets.LATITUDE }}
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: python -m src.features.feature_pipeline
 
-      - name: Commit Predictions
+      - name: Commit Data
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'

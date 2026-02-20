@@ -2,7 +2,7 @@ name: training-pipeline
 
 on:
   schedule:
-    - cron: '30 */6 * * *'  # Runs at minute 30 every 6 hours (00:30, 06:30, 12:30, 18:30)
+    - cron: '50 0 * * *'  # Runs once daily at 00:50 UTC (after midnight)
   workflow_dispatch:
 
 jobs:
@@ -22,11 +22,11 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: '3.11'
-          auto-activate-base: false
-          activate-environment: .venv  # Matches your existing conda activate .venv
+          auto-activate: false
+          activate-environment: .venv
 
       - name: Install Twofish via Conda
-        run: conda install -c conda-forge twofish -y  # Fixed: conda-forge not forge-conda
+        run: conda install -c conda-forge twofish -y
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
@@ -35,13 +35,14 @@ jobs:
         env:
           LONGITUDE: ${{ secrets.LONGITUDE }}
           LATITUDE: ${{ secrets.LATITUDE }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
         run: python -m src.models.train_model
 
       - name: Generate Predictions
         env:
+          LONGITUDE: ${{ secrets.LONGITUDE }}
+          LATITUDE: ${{ secrets.LATITUDE }}
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
         run: python -m src.inference.predict_3days
@@ -51,7 +52,7 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           git pull --rebase origin main || true
-          git add data/predictions_3day.csv
+          git add data/predictions_3day.csv data/predictions_comparison.csv data/model_metrics.json
           git add data/model_version.json || true
-          git commit -m "Update predictions and model version" || echo "No changes to commit"
+          git commit -m "Update predictions and model artifacts" || echo "No changes to commit"
           git push || echo "Push failed, may require manual intervention"

@@ -2,7 +2,6 @@
 Verify environment setup and critical files existence.
 """
 import sys
-import os
 from pathlib import Path
 
 FILES = [
@@ -47,7 +46,7 @@ def check_imports():
         import streamlit
         import fastapi
         import hopsworks
-        import xgboost
+        import lightgbm
         print("✅ Core dependencies importable.")
     except ImportError as e:
         print(f"❌ Import failed: {e}")
