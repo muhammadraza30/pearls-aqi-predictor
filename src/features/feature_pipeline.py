@@ -1,6 +1,7 @@
 import sys
 import os
 import pandas as pd
+import numpy as np
 from datetime import datetime
 import requests
 
@@ -32,6 +33,52 @@ def _enforce_types(df: pd.DataFrame) -> pd.DataFrame:
     df[float_cols] = df[float_cols].round(1)
 
     return df
+
+
+def _cast_to_fg_schema(df: pd.DataFrame, fg) -> pd.DataFrame:
+    """
+    Casts DataFrame columns to match the Feature Group's expected types.
+    Handles 'float' (32-bit) vs 'double' (64-bit) mismatches.
+    """
+    df_casted = df.copy()
+    
+    # Map Hopsworks types to Numpy/Pandas types
+    type_mapping = {
+        "float": np.float32,
+        "double": np.float64,
+        "bigint": np.int64,
+        "int": np.int32,
+        "smallint": np.int16,
+        "tinyint": np.int8,
+        "boolean": bool,
+        "string": str,
+    }
+
+    print("🔧 Syncing DataFrame types with Feature Group schema...")
+    for feature in fg.features:
+        col_name = feature.name
+        hs_type = feature.type.lower()
+        
+        if col_name in df_casted.columns:
+            target_type = type_mapping.get(hs_type)
+            
+            if target_type:
+                try:
+                    # Special handling for nullable integers in float columns
+                    if "int" in str(target_type) and df_casted[col_name].isnull().any():
+                        print(f"⚠️ Column '{col_name}' contains NaNs, cannot cast to {target_type}. Filling with 0.")
+                        df_casted[col_name].fillna(0, inplace=True)
+                        
+                    current_type = df_casted[col_name].dtype
+                    # Cast if types look different (e.g. float64 vs float32)
+                    if current_type != target_type:
+                        df_casted[col_name] = df_casted[col_name].astype(target_type)
+                except Exception as e:
+                    print(f"⚠️ Failed to cast '{col_name}' to {target_type}: {e}")
+            else:
+                pass # Unknown type, skip casting
+                
+    return df_casted
 
 
 def _save_to_csv(df: pd.DataFrame):
@@ -142,6 +189,10 @@ def run_feature_pipeline():
     else:
         # Insert current data into existing FG
         print("\n☁️  Inserting current data into Feature Group...")
+        
+        # Cast types to match schema (fix for float32/float64 mismatch)
+        clean_df = _cast_to_fg_schema(clean_df, aqi_fg)
+        
         try:
             aqi_fg.insert(clean_df, write_options={"wait_for_job": True})
             print(f"✅ Current data inserted — {len(clean_df)} rows.")

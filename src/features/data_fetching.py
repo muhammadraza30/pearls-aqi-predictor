@@ -145,8 +145,28 @@ def fetch_historical_data(
     lat = lat or LAT
     lon = lon or LON
 
+    # Helper to ensure YYYY-MM-DD format
+    def _format_date(date_str):
+        try:
+            # Check if it's already YYYY-MM-DD
+            datetime.strptime(date_str, "%Y-%m-%d")
+            return date_str
+        except ValueError:
+            # Try DD-MM-YYYY
+            try:
+                return datetime.strptime(date_str, "%d-%m-%Y").strftime("%Y-%m-%d")
+            except ValueError:
+                # Fallback or raise
+                return date_str
+
+    start_date = _format_date(start_date)
+
     if end_date is None:
-        end_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        # Default to today to fetch as much recent data as possible from archive
+        # Note: Archive API usually takes 'end_date' inclusive.
+        end_date = datetime.now().strftime("%Y-%m-%d")
+    else:
+        end_date = _format_date(end_date)
 
     # Set up retrying cached session
     cache_session = requests_cache.CachedSession(".cache", expire_after=3600)

@@ -2,7 +2,7 @@ name: feature-pipeline
 
 on:
   schedule:
-    - cron: '30 0 * * *'  # Runs once daily at 00:30 UTC (after midnight)
+    - cron: '10 * * * *'  # Runs once daily at 00:30 UTC (after midnight)
   workflow_dispatch:
 
 concurrency:
