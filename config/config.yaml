@@ -1,0 +1,34 @@
+project:
+  name: "Pearls AQI Predictor"
+  description: "Real-time AQI forecasting for Karachi"
+  version: "1.0.0"
+
+location:
+  city: "Karachi"
+  country: "Pakistan"
+  latitude: 24.8608
+  longitude: 67.0104
+  timezone: "Asia/Karachi"
+
+hopsworks:
+  feature_group_name: "aqi_features"
+  feature_group_version: 1
+  model_registry_prefix: "aqi_"
+  models:
+    - "SVR"
+    - "LightGBM"
+    - "LSTM"
+
+prediction:
+  horizon_days: 4  # Today + 3 days
+  persistence_weight: 0.2  # Blend factor if using persistence
+  aqi_max: 500
+  aqi_min: 0
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+dashboard:
+  port: 8501
+  theme: "light"

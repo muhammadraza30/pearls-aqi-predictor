@@ -1,0 +1,55 @@
+name: feature-pipeline
+
+on:
+  schedule:
+    - cron: '10 * * * *'  # Runs once daily at 00:30 UTC (after midnight)
+  workflow_dispatch:
+
+concurrency:
+  group: feature-pipeline
+  cancel-in-progress: false
+
+jobs:
+  feature-pipeline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: '3.11'
+          auto-activate: false
+          activate-environment: .venv
+          conda-remove-defaults: true
+          channels: conda-forge
+
+      - name: Install Twofish via Conda
+        run: conda install -c conda-forge twofish -y
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Feature Pipeline
+        env:
+          LONGITUDE: ${{ secrets.LONGITUDE }}
+          LATITUDE: ${{ secrets.LATITUDE }}
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+        run: python -m src.features.feature_pipeline
+
+      - name: Commit Data
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git pull --rebase origin main || true
+          git add data/
+          git commit -m "Update data and features" || echo "No changes to commit"
+          git push || echo "Push failed, may require manual intervention"
