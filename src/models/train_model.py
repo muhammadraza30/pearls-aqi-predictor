@@ -65,9 +65,9 @@ def train_and_eval(model_name, model, X_train, y_train, X_test, y_test, is_lstm=
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
         
-    rmse = np.sqrt(mean_squared_error(y_test, preds))
-    mae = mean_absolute_error(y_test, preds)
-    r2 = r2_score(y_test, preds)
+    rmse = float(np.sqrt(mean_squared_error(y_test, preds)))
+    mae = float(mean_absolute_error(y_test, preds))
+    r2 = float(r2_score(y_test, preds))
     
     print(f"   Shape: Train={X_train.shape}, Test={X_test.shape}")
     print(f"   RMSE: {rmse:.4f}")
