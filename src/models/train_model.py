@@ -92,6 +92,10 @@ def run_training():
 
     print(f"📊 Raw Data Shape: {df.shape}")
     
+    # Drop any rows with NaNs that might have slipped through
+    df = df.dropna()
+    print(f"📊 Data Shape after dropping NaNs: {df.shape}")
+    
     # # 1. Feature Engineering
     # df_processed = create_lag_features(df)
     # print(f"📊 Processed Data Shape (with Lags): {df_processed.shape}")

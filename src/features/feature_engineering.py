@@ -41,6 +41,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     numeric_cols = df.select_dtypes(include="number").columns
     df[numeric_cols] = df[numeric_cols].ffill().bfill()
 
+    # Drop any remaining NaNs (e.g. from shifts/lags if fill didn't catch them or if they are at the start)
+    df = df.dropna()
+
     return df
 
 

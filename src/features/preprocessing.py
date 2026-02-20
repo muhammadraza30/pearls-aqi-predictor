@@ -107,6 +107,12 @@ def fit_scaler(X_train, save_path: str = "models/scaler.pkl"):
     Returns (scaler, X_train_scaled).
     """
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    
+    # Ensure no NaNs or Infs
+    if np.any(np.isnan(X_train)) or np.any(np.isinf(X_train)):
+        print("⚠️ X_train contains NaNs or Infs. Filling/Clipping...")
+        X_train = np.nan_to_num(X_train, nan=0.0, posinf=None, neginf=None)
+
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     joblib.dump(scaler, save_path)
@@ -116,4 +122,8 @@ def fit_scaler(X_train, save_path: str = "models/scaler.pkl"):
 
 def scale_features(X, scaler):
     """Transforms feature array using a previously fitted scaler."""
+    if np.any(np.isnan(X)) or np.any(np.isinf(X)):
+        # print("⚠️ X contains NaNs or Infs during scaling. Filling/Clipping...")
+        X = np.nan_to_num(X, nan=0.0, posinf=None, neginf=None)
+        
     return scaler.transform(X)
