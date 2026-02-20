@@ -57,6 +57,14 @@ def fetch_current_data(lat: float = None, lon: float = None) -> pd.DataFrame:
     Fetches the latest hour's weather + AQI data from Open-Meteo forecast API.
     Returns a single-row DataFrame matching the raw schema.
     """
+    return fetch_recent_data(lat, lon, past_days=0)
+
+
+def fetch_recent_data(lat: float = None, lon: float = None, past_days: int = 3) -> pd.DataFrame:
+    """
+    Fetches recent weather + AQI data (past N days + today) from Open-Meteo forecast API.
+    Useful for incremental updates where context (lags) is needed.
+    """
     lat = lat or LAT
     lon = lon or LON
 
@@ -64,7 +72,8 @@ def fetch_current_data(lat: float = None, lon: float = None) -> pd.DataFrame:
     weather_params = {
         "latitude": lat,
         "longitude": lon,
-        "current": [
+        "past_days": past_days,
+        "hourly": [
             "temperature_2m", "relative_humidity_2m", "pressure_msl",
             "wind_speed_10m", "wind_direction_10m", "cloud_cover",
         ],
@@ -74,7 +83,8 @@ def fetch_current_data(lat: float = None, lon: float = None) -> pd.DataFrame:
     aqi_params = {
         "latitude": lat,
         "longitude": lon,
-        "current": [
+        "past_days": past_days,
+        "hourly": [
             "pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide",
             "sulphur_dioxide", "ozone", "us_aqi",
         ],
@@ -88,20 +98,25 @@ def fetch_current_data(lat: float = None, lon: float = None) -> pd.DataFrame:
             print(f"❌ API error: Weather={w_resp.status_code}, AQI={a_resp.status_code}")
             return pd.DataFrame()
 
-        w_json = w_resp.json().get("current", {})
-        a_json = a_resp.json().get("current", {})
+        w_json = w_resp.json().get("hourly", {})
+        a_json = a_resp.json().get("hourly", {})
 
-        # Use last complete hour as the timestamp
-        last_hour = _get_last_complete_hour()
+        if not w_json or not a_json:
+            return pd.DataFrame()
 
-        data = {
-            "datetime": last_hour,
+        # Create DataFrames from hourly data
+        w_df = pd.DataFrame({
+            "datetime": pd.to_datetime(w_json.get("time")),
             "temp": w_json.get("temperature_2m"),
             "humidity": w_json.get("relative_humidity_2m"),
             "pressure": w_json.get("pressure_msl"),
             "wind_speed": w_json.get("wind_speed_10m"),
             "wind_deg": w_json.get("wind_direction_10m"),
             "clouds": w_json.get("cloud_cover"),
+        })
+
+        a_df = pd.DataFrame({
+            "datetime": pd.to_datetime(a_json.get("time")),
             "pm10": a_json.get("pm10"),
             "pm2_5": a_json.get("pm2_5"),
             "co": a_json.get("carbon_monoxide"),
@@ -109,14 +124,19 @@ def fetch_current_data(lat: float = None, lon: float = None) -> pd.DataFrame:
             "so2": a_json.get("sulphur_dioxide"),
             "o3": a_json.get("ozone"),
             "aqi": a_json.get("us_aqi"),
-        }
+        })
 
-        df = pd.DataFrame([data])
-        df["datetime"] = pd.to_datetime(df["datetime"])
+        # Merge on datetime
+        df = pd.merge(w_df, a_df, on="datetime")
+
+        # Truncate to last complete hour
+        last_hour = _get_last_complete_hour()
+        df = df[df["datetime"] <= last_hour]
+
         return df[RAW_COLUMNS]
 
     except Exception as e:
-        print(f"❌ Exception fetching current data: {e}")
+        print(f"❌ Exception fetching recent data: {e}")
         return pd.DataFrame()
 
 

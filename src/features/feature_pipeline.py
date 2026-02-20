@@ -12,7 +12,7 @@ sys.path.insert(0, PROJECT_ROOT)
 from dotenv import load_dotenv
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
-from src.features.data_fetching import fetch_current_data, fetch_historical_data
+from src.features.data_fetching import fetch_current_data, fetch_historical_data, fetch_recent_data
 from src.features.feature_engineering import engineer_features
 from src.features.preprocessing import preprocess
 from src.hopsworks_api import get_project
@@ -142,11 +142,11 @@ def run_feature_pipeline():
 
     # ──────────────── 2. FETCH DATA ────────────────
     if fg_exists:
-        # Only fetch current hour's data
-        print(f"\n📡 Fetching CURRENT data for ({LAT}, {LON})...")
-        raw_df = fetch_current_data(LAT, LON)
+        # Fetch last 72 hours to ensure lags can be computed
+        print(f"\n📡 Fetching RECENT data for ({LAT}, {LON})...")
+        raw_df = fetch_recent_data(LAT, LON, past_days=3)
         if raw_df.empty:
-            print("❌ Failed to fetch current data. Aborting.")
+            print("❌ Failed to fetch recent data. Aborting.")
             return
     else:
         # Backfill from 2025-08-01 to last complete hour
