@@ -101,11 +101,9 @@ def load_historical_data() -> pd.DataFrame:
 
 def get_model_version() -> dict:
     """Get current model version info."""
-    VERSION_FILE = get_project().get_model_registry().get_models("aqi_lightgbm_model")[-1]
-
-    # if VERSION_FILE.exists():
-    #     with open(VERSION_FILE) as f:
-    #         return json.load(f)
+    VERSION_FILE = get_project().get_model_registry().get_models("aqi_lightgbm_model")
+    VERSION_FILE.sort(key=lambda model: model.version, reverse=True)
+    VERSION_FILE = VERSION_FILE[0]
     return {"version": VERSION_FILE.version, "trained_at": datetime.fromtimestamp(VERSION_FILE.created/ 1000).strftime('%Y-%m-%d %H:%M:%S'), "models": []}
 
 
