@@ -1,5 +1,5 @@
 date,aqi_pred,category,level,color,message,emoji,is_hazardous,model_used
-2026-02-20,84.1,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,SVR
-2026-02-21,126.6,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,SVR
-2026-02-22,74.3,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,SVR
-2026-02-23,112.7,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,SVR
+2026-02-20,73.4,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,SVR
+2026-02-21,71.2,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,SVR
+2026-02-22,71.4,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,SVR
+2026-02-23,113.2,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,SVR
