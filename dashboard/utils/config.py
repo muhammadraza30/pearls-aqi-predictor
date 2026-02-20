@@ -231,10 +231,14 @@ CUSTOM_CSS = """
     }
 
     /* ---- Hide Streamlit Elements ---- */
+    /* ---- Hide Streamlit Elements ---- */
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
+    /* header {visibility: hidden;}  <-- Commented out to allow sidebar toggle */
     footer {visibility: hidden;}
-    div[data-testid="stDecoration"] {visibility: hidden;}
+    /* div[data-testid="stDecoration"] {visibility: hidden;} */
+    
+    /* Ensure sidebar toggle is visible if header is hidden (alternative approach if needed) */
+    /* [data-testid="stSidebarNav"] {display: block;} */
     
     /* ---- Footer ---- */
     .app-footer {

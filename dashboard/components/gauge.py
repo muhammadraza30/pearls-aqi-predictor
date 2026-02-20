@@ -85,7 +85,7 @@ def create_aqi_gauge(aqi_value: float, title: str = "Current AQI", height: int =
 
     fig.update_layout(
         height=height,
-        margin=dict(l=30, r=30, t=60, b=30),
+        margin=dict(l=30, r=30, t=80, b=30),  # Increased top margin to prevent title overlap
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff",
         font={"family": "Inter, sans-serif"},
