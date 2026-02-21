@@ -1,5 +1,5 @@
 date,aqi_pred,category,level,color,message,emoji,is_hazardous,model_used
-2026-02-21,107.3,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,LightGBM
-2026-02-22,72.5,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,LightGBM
-2026-02-23,79.9,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,LightGBM
-2026-02-24,106.7,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,LightGBM
+2026-02-21,104.9,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,LightGBM
+2026-02-22,74.9,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,LightGBM
+2026-02-23,68.8,Moderate,2,#ffff00,Air quality is acceptable.,🟡,False,LightGBM
+2026-02-24,121.7,Unhealthy for Sensitive Groups,3,#ff7e00,Members of sensitive groups may experience health effects.,🟠,True,LightGBM
