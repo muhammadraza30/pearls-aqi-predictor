@@ -2,7 +2,7 @@ name: training-pipeline
 
 on:
   schedule:
-    - cron: '30 * * * *'  # Runs once daily at 00:50 UTC (after midnight)
+    - cron: '30 0 * * *'  # Runs once daily at 00:30 UTC (after midnight)
   workflow_dispatch:
 
 jobs:
